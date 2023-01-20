@@ -32,13 +32,13 @@
     </style>
 </head>
 <body>
-<script type="module" src="/src/main.ts"></script>
+<script src="ehri-web-components.js"></script>
 
 <h1>EHRI Web Component Demo</h1>
 
 <p>
-    This library provides an <code>&lt;ehri-item&gt;</code> custom tag. It takes a single <code>&quot;id&quot;</code>
-    with the global identifier of the EHRI metadata item you want to embed.
+    This library provides an <code>&lt;ehri-item&gt;</code> custom tag. It takes a single <code>&quot;item-id&quot;</code>
+    attribute with the global identifier of the EHRI metadata item you want to embed.
 </p>
 <p>
     The following types of item are currently supported:
@@ -53,18 +53,18 @@
 <pre>
     &lt;script src=&quot;ehri-web-components.js&quot;&gt;&lt;/script&gt;
 
-    &lt;ehri-item id=&quot;us-005578&quot;&gt;&lt;/ehri-item&gt;
+    &lt;ehri-item item-id=&quot;us-005578&quot;&gt;&lt;/ehri-item&gt;
 </pre>
 
 <h2>Examples:</h2>
 <h3>Archival Institutions</h3>
-<ehri-item id="us-005578"></ehri-item>
+<ehri-item item-id="us-005578"></ehri-item>
 
 <h3>Archival Descriptions</h3>
-<ehri-item id="il-002798-4019665"></ehri-item>
+<ehri-item item-id="il-002798-4019665"></ehri-item>
 
 <h3>Archival Authorities</h3>
-<ehri-item id="ehri_cb-001658"></ehri-item>
+<ehri-item item-id="ehri_cb-001658" base-url="https://portal.ehri-project-stage.eu"></ehri-item>
 
 </body>
 </html>
