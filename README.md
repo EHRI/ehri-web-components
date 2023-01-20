@@ -17,6 +17,7 @@ Currently the following item types are supported:
 * [Archival Institutions](https://portal.ehri-project.eu/institutions)
 * [Archival Descriptions](https://portal.ehri-project.eu/units)
 * [Authorities (People, Corporate Bodies etc)](https://portal.ehri-project.eu/sets)
+* [Country Reports](https://portal.ehri-project.eu/countries)
 
 NB: this library is at a very early stage and probably has numerous bugs and issues.
 
