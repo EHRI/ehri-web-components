@@ -3,20 +3,20 @@
 A set of web components for embedding info derived from the [EHRI Portal](https://portal.ehri-project.eu/) into web
 pages.
 
-## Type Support for `.vue` Imports in TS
+Example:
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin) to make the TypeScript language service aware of `.vue` types.
+```html
+<script src="dist/ehri-web-components.js"></script>
 
-If the standalone TypeScript plugin doesn't feel fast enough to you, Volar has also implemented a [Take Over Mode](https://github.com/johnsoncodehk/volar/discussions/471#discussioncomment-1361669) that is more performant. You can enable it by the following steps:
+<h1>Info about an institution:</h1>
+<ehri-item id="us-005578"></ehri-item>
+```
 
-1. Disable the built-in TypeScript Extension
-    1) Run `Extensions: Show Built-in Extensions` from VSCode's command palette
-    2) Find `TypeScript and JavaScript Language Features`, right click and select `Disable (Workspace)`
-2. Reload the VSCode window by running `Developer: Reload Window` from the command palette.
+Currently the following item types are supported:
 
-## Customize configuration
-
-See [Vite Configuration Reference](https://vitejs.dev/config/).
+* [Archival Institutions](https://portal.ehri-project.eu/institutions)
+* [Archival Descriptions](https://portal.ehri-project.eu/units)
+* [Authorities (People, Corporate Bodies etc)](https://portal.ehri-project.eu/sets)
 
 ## Project Setup
 
@@ -35,3 +35,8 @@ npm run dev
 ```sh
 npm run build
 ```
+
+## Customize configuration
+
+See [Vite Configuration Reference](https://vitejs.dev/config/).
+

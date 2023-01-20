@@ -2,13 +2,13 @@
 
 import EhriItemOutline from './EhriItemOutline.vue';
 import EhriItemHeader from './EhriItemHeader.vue';
-import type {MetaAttrs, RepositoryAttrs} from "@/api";
 import {computed} from "vue";
+import type {HistoricalAgentAttrs, MetaAttrs} from "@/api";
 
 const props = defineProps<{
   id: string,
   type: string,
-  attributes: RepositoryAttrs,
+  attributes: HistoricalAgentAttrs,
   meta: MetaAttrs,
   baseUrl: string
 }>();
@@ -17,10 +17,10 @@ const otherNames = computed(() => {
   let ofn = props.attributes.otherFormsOfName || [];
   let pfn = props.attributes.parallelFormsOfName || [];
   return ofn.concat(pfn);
-})
+});
 
 const itemUrl = computed(() => {
-  return props.baseUrl + '/institutions/' + props.id;
+  return props.baseUrl + '/authorities/' + props.id;
 });
 
 const summary = computed(() => {
@@ -40,20 +40,6 @@ const summary = computed(() => {
     </template>
     <template v-slot:body>
       <p v-for="p in summary">{{ p }}</p>
-    </template>
-    <template v-slot:details>
-      <ul class="concise-address">
-        <li v-if="attributes.address && attributes.address.country && attributes.address.countryCode">
-          <a target="_blank" v-bind:href="'https://portal.ehri-project.eu/countries/' +
-          attributes.address.countryCode?.toLowerCase()"
-             class="alt">
-            {{ attributes.address.country }}
-          </a>
-        </li>
-        <li v-if="attributes.address && attributes.address.streetAddress">{{ attributes.address.streetAddress }}</li>
-        <li v-if="attributes.address.city">{{ attributes.address.city }}</li>
-        <li v-if="meta.updated">Updated {{ meta.updated }}</li>
-      </ul>
     </template>
   </ehri-item-outline>
 </template>

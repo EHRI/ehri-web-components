@@ -1,14 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EHRI Components test</title>
-  </head>
-  <body>
-    <script type="module" src="/src/main.ts"></script>
+    <style>
+        html,
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            background-color: rgb(240, 240, 240);
+            border: 0;
+            padding: 2rem;
+        }
 
-    <h1>The following should be an EHRI institution:</h1>
-    <ehri-item id="us-005578"></ehri-item>
-  </body>
+        h1 {
+            font-size: 2rem;
+        }
+        h2 {
+            font-size: 1.5rem;
+        }
+        code {
+            font-family: monospace;
+        }
+        pre {
+            margin: 0;
+            background-color: #fff;
+            padding: .4rem;
+            font-weight: normal;
+        }
+    </style>
+</head>
+<body>
+<script type="module" src="/src/main.ts"></script>
+
+<h1>EHRI Web Component Demo</h1>
+
+<p>
+    This library provides an <code>&lt;ehri-item&gt;</code> custom tag. It takes a single <code>&quot;id&quot;</code>
+    with the global identifier of the EHRI metadata item you want to embed.
+</p>
+<p>
+    The following types of item are currently supported:
+</p>
+<ul>
+    <li>Archival Institutions</li>
+    <li>Archival Descriptions</li>
+    <li>Archival Authorities</li>
+</ul>
+
+<h2>Example code:</h2>
+<pre>
+    &lt;script src=&quot;ehri-web-components.js&quot;&gt;&lt;/script&gt;
+
+    &lt;ehri-item id=&quot;us-005578&quot;&gt;&lt;/ehri-item&gt;
+</pre>
+
+<h2>Examples:</h2>
+<h3>Archival Institutions</h3>
+<ehri-item id="us-005578"></ehri-item>
+
+<h3>Archival Descriptions</h3>
+<ehri-item id="il-002798-4019665"></ehri-item>
+
+<h3>Archival Authorities</h3>
+<ehri-item id="ehri_cb-001658"></ehri-item>
+
+</body>
 </html>

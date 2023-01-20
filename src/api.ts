@@ -1,13 +1,22 @@
 
 export interface ItemJson {
     data: ItemData
+    included?: RepositoryItemData[]
+    errors?: {detail: string}[]
 }
 
 export interface ItemData {
     id: string
     type: string
-    attributes: object
-    meta?: object
+    attributes: RepositoryAttrs|DocumentaryUnitAttrs|HistoricalAgentAttrs
+    meta?: MetaAttrs
+}
+
+export interface RepositoryItemData {
+    id: string
+    type: string
+    attributes: RepositoryAttrs
+    meta?: MetaAttrs
 }
 
 export interface MetaAttrs {
@@ -28,23 +37,32 @@ export interface Address {
     url: string[]
 }
 
-type Lat = number
-type Lon = number
-
-export interface Geo {
-    type: string
-    coordinates: [Lat, Lon]
-}
-
 export interface RepositoryAttrs {
     name: string
-    parallelFormsOfName: string[]
-    otherFormsOfName: string[]
+    parallelFormsOfName?: string[]
+    otherFormsOfName?: string[]
     address: Address
     history?: string
-    holdings?: string
-    openingTimes?: string
-    reproductionServices?: string
-    geo: Geo
 }
 
+export interface DocumentaryUnitAttrs {
+    localId: string
+    alternateIds: string[]
+    descriptions: DocumentaryUnitDescriptionAttrs[]
+}
+
+export interface DocumentaryUnitDescriptionAttrs {
+    name: string
+    language: string
+    parallelFormsOfName: string[]
+    biographicalHistory?: string
+    extentAndMedium?: string
+    scopeAndContent?: string
+}
+
+export interface HistoricalAgentAttrs {
+    name: string
+    parallelFormsOfName?: string[]
+    otherFormsOfName?: string[]
+    history?: string
+}
