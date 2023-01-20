@@ -1,9 +1,12 @@
 {
   "name": "web-components",
   "version": "0.0.1",
-  "private": true,
-  "scripts": {
-  },
+  "license": "EUPL-1.2",
+  "homepage": "https://github.com/EHRI/ehri-web-components",
+  "bugs": "https://github.com/EHRI/ehri-web-components/issues",
+  "readme": "https://github.com/EHRI/ehri-web-components/README.md",
+  "description": "A small plain JS library for embedding info about EHRI portal items in web pages.",
+  "main": "ehri-web-components.js",
   "dependencies": {
   },
   "devDependencies": {

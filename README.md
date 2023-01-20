@@ -18,3 +18,6 @@ Currently the following item types are supported:
 * [Archival Descriptions](https://portal.ehri-project.eu/units)
 * [Authorities (People, Corporate Bodies etc)](https://portal.ehri-project.eu/sets)
 
+NB: this library is at a very early stage and probably has numerous bugs and issues.
+
+
