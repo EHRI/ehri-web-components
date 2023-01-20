@@ -10,6 +10,12 @@ const EI_PATH_MAP = {
   Country: 'countries',
 }
 
+function ehri_truncateText(str) {
+  return str
+      ? str.split(/\r?\n\r?\n/).splice(0, 4)
+      : [];
+}
+
 const EI_TEMPLATE = `
   <style>
     .ei-container * {
@@ -170,8 +176,7 @@ const EI_TEMPLATE = `
         margin: 10px;
     }
 
-    .loading-placeholder
-    {
+    .loading-placeholder {
         background-color: #efefef;
         color: #efefef;
         white-space:nowrap;
@@ -212,7 +217,6 @@ const EI_TEMPLATE = `
     </div>
   </div>
 `;
-
 
 class EHRIItem extends HTMLElement {
   constructor() {
@@ -257,17 +261,11 @@ class EHRIItem extends HTMLElement {
         });
   }
 
-  truncateText(str) {
-    return str
-        ? str.split(/\r?\n\r?\n/).splice(0, 4)
-        : [];
-  }
-
   parseRepository(baseUrl, itemId, type, json) {
     const name = json.data.attributes.name;
     const otherNames = (json.data.attributes.otherFormsOfName || [])
         .concat(json.data.attributes.parallelFormsOfName || []);
-    const paras = this.truncateText(json.data.attributes.history);
+    const paras = ehri_truncateText(json.data.attributes.history);
     const url = `${baseUrl}/${EI_PATH_MAP[type]}/${itemId}`;
     const details = [];
     for (let attr of ['streetAddress', 'city']) {
@@ -296,7 +294,7 @@ class EHRIItem extends HTMLElement {
     const name = json.data.attributes.name;
     const otherNames = (json.data.attributes.otherFormsOfName || [])
         .concat(json.data.attributes.parallelFormsOfName || []);
-    const paras = this.truncateText(json.data.attributes.history);
+    const paras = ehri_truncateText(json.data.attributes.history);
     const url = `${baseUrl}/${EI_PATH_MAP[type]}/${itemId}`;
     const details = [];
     const parents = {};
@@ -308,7 +306,7 @@ class EHRIItem extends HTMLElement {
   parseDocumentaryUnit(baseUrl, itemId, type, json) {
     const name = json.data.attributes.descriptions[0].name;
     const otherNames = json.data.attributes.descriptions[0].parallelFormsOfName || [];
-    const paras = this.truncateText(json.data.attributes.descriptions[0].scopeAndContent);
+    const paras = ehri_truncateText(json.data.attributes.descriptions[0].scopeAndContent);
     const url = `${baseUrl}/${EI_PATH_MAP[type]}/${itemId}`;
     const details = [];
     details.push(json.data.attributes.localId);
@@ -336,7 +334,7 @@ class EHRIItem extends HTMLElement {
   parseCountry(baseUrl, itemId, type, json) {
     const name = json.data.attributes.name;
     const otherNames = [];
-    const paras = this.truncateText(json.data.attributes.history);
+    const paras = ehri_truncateText(json.data.attributes.history);
     const url = `${baseUrl}/${EI_PATH_MAP[type]}/${itemId}`;
     const details = [];
     const parents = {};
@@ -435,4 +433,155 @@ class EHRIItem extends HTMLElement {
   }
 }
 
+
+const ER_ID_ATTR = "resource-id";
+const ER_BASE_URL_ATTR = "base-url";
+const ER_BASE_URL = "https://api.eosc-portal.eu";
+
+const ER_TEMPLATE = `
+  <style>
+  .er {
+    display: grid;
+    grid-template-areas: 'logo title' 'logo description';
+    grid-template-columns: 8rem 1fr;
+    grid-gap: 1rem;
+    border: 1px solid #eee;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    line-height: 1.42857;
+    font-size: 14px;
+    margin: 1rem 0;
+    box-shadow: 2px 2px 6px 2px rgba(230, 230, 230, 1);
+    background-color: #fff;
+    padding: .7em .5em;
+  }
+  .logo {
+    grid-area: logo;
+  }
+  img {
+    width: 8rem;
+    height: auto;
+  }
+  header {
+    grid-area: title;
+    margin: 0;
+    color: #83014c;
+    font-size: 1.3rem;
+  }
+  header a {
+    text-decoration: none;
+  }
+  header a:hover {
+    text-decoration: underline;
+  }
+  .er-description {
+    grid-area: description;
+  }
+  .er-description p {
+    margin: 0 0 1rem 0;
+  }
+  .er-description img {
+    width: 20rem;
+    height: auto;
+  }
+  .loading-placeholder {
+      background-color: #efefef;
+      color: #efefef;
+      white-space:nowrap;
+      -moz-transform: rotate(.8deg) skewx(-12deg);
+      -moz-box-shadow:3px 0 2px #444;
+      border:4px solid #fff;
+      background: -moz-linear-gradient(180deg, #000, #222);
+  }
+  .logo.loading-placeholder {
+    width: 8rem;
+    height: 8rem;
+  }
+  </style>
+  <div class="er">
+    <a href="#" target="_blank" class="logo loading-placeholder">
+    </a>
+    <header class="er-header">
+        <a class="loading-placeholder" href="#" target="_blank">Loading...</a>
+    </header>
+    <div class="er-description">
+        <p class="loading-placeholder"></p>
+        <p class="loading-placeholder"></p>
+        <p class="loading-placeholder"></p>
+        <p class="loading-placeholder"></p>
+    </div>
+  </div>
+`;
+
+class EHRIResource extends HTMLElement {
+  constructor() {
+    self = super();
+
+    this.attachShadow({ mode: "open" });
+    let template = document.createElement("template");
+    template.innerHTML = ER_TEMPLATE;
+    this.shadowRoot.appendChild(template.content);
+  }
+
+  static get observedAttributes() {
+    return [ER_ID_ATTR, ER_BASE_URL_ATTR];
+  }
+
+  attributeChangedCallback() {
+    this.render();
+  }
+
+  connectedCallback() {
+    this.render();
+  }
+
+  buildFragment(data) {
+    let content = document.createElement("template");
+    content.innerHTML = ER_TEMPLATE;
+    let fragment = content.content;
+
+    let logoLink = fragment.querySelector(".er a.logo");
+    logoLink.classList.remove("loading-placeholder");
+    let logoImg = document.createElement("img");
+    logoImg.setAttribute("alt", data.name);
+    logoImg.setAttribute("src", data.logo);
+    logoLink.appendChild(logoImg);
+
+    let headerLink = fragment.querySelector("header a");
+    headerLink.classList.remove("loading-placeholder");
+    headerLink.setAttribute("href", data.webpage);
+    headerLink.textContent = data.name;
+
+    let descDiv = fragment.querySelector(".er-description");
+    descDiv.textContent = '';
+    for (let para of ehri_truncateText(data.description)) {
+      let p = document.createElement("p");
+      p.textContent = para;
+      descDiv.appendChild(p);
+    }
+
+    return fragment;
+  }
+
+  render() {
+    let itemId = this.getAttribute(ER_ID_ATTR);
+    let baseUrl = this.getAttribute(ER_BASE_URL_ATTR) || ER_BASE_URL;
+    fetch(`${baseUrl}/service/${itemId}`)
+        .then(r => r.json())
+        .then(data => {
+          let fragment = this.buildFragment(data);
+          this.shadowRoot.textContent = "";
+          this.shadowRoot.appendChild(fragment);
+        })
+        .catch(e => {
+          console.error(e);
+          this.shadowRoot.innerHTML = `
+            <pre class="error">
+              An EHRI resource with id &quot;${itemId}&quot; could not be loaded.
+            </pre>
+          `;
+        });
+  }
+}
+
 customElements.define("ehri-item", EHRIItem);
+customElements.define("ehri-resource", EHRIResource);
