@@ -10,7 +10,7 @@ const EI_PATH_MAP = {
   Country: 'countries',
 }
 
-function ehri_truncateText(str) {
+function truncateText(str) {
   return str
       ? str.split(/\r?\n\r?\n/).splice(0, 4)
       : [];
@@ -265,7 +265,7 @@ class EHRIItem extends HTMLElement {
     const name = json.data.attributes.name;
     const otherNames = (json.data.attributes.otherFormsOfName || [])
         .concat(json.data.attributes.parallelFormsOfName || []);
-    const paras = ehri_truncateText(json.data.attributes.history);
+    const paras = truncateText(json.data.attributes.history);
     const url = `${baseUrl}/${EI_PATH_MAP[type]}/${itemId}`;
     const details = [];
     for (let attr of ['streetAddress', 'city']) {
@@ -294,7 +294,7 @@ class EHRIItem extends HTMLElement {
     const name = json.data.attributes.name;
     const otherNames = (json.data.attributes.otherFormsOfName || [])
         .concat(json.data.attributes.parallelFormsOfName || []);
-    const paras = ehri_truncateText(json.data.attributes.history);
+    const paras = truncateText(json.data.attributes.history);
     const url = `${baseUrl}/${EI_PATH_MAP[type]}/${itemId}`;
     const details = [];
     const parents = {};
@@ -306,7 +306,7 @@ class EHRIItem extends HTMLElement {
   parseDocumentaryUnit(baseUrl, itemId, type, json) {
     const name = json.data.attributes.descriptions[0].name;
     const otherNames = json.data.attributes.descriptions[0].parallelFormsOfName || [];
-    const paras = ehri_truncateText(json.data.attributes.descriptions[0].scopeAndContent);
+    const paras = truncateText(json.data.attributes.descriptions[0].scopeAndContent);
     const url = `${baseUrl}/${EI_PATH_MAP[type]}/${itemId}`;
     const details = [];
     details.push(json.data.attributes.localId);
@@ -334,7 +334,7 @@ class EHRIItem extends HTMLElement {
   parseCountry(baseUrl, itemId, type, json) {
     const name = json.data.attributes.name;
     const otherNames = [];
-    const paras = ehri_truncateText(json.data.attributes.history);
+    const paras = truncateText(json.data.attributes.history);
     const url = `${baseUrl}/${EI_PATH_MAP[type]}/${itemId}`;
     const details = [];
     const parents = {};
@@ -342,7 +342,7 @@ class EHRIItem extends HTMLElement {
     if (json.data.meta.subitems) {
       let i = json.data.meta.subitems;
       if (i > 0) {
-        subItems = `${i} institutions` + (i > 1 ? 's' : '');
+        subItems = `${i} institution` + (i > 1 ? 's' : '');
       }
     }
 
@@ -402,7 +402,7 @@ class EHRIItem extends HTMLElement {
       a.href = url;
       a.textContent = name;
       a.classList.add("alt");
-      a.setAttribute("target", "_blank");
+      a.target = "_blank";
       li.appendChild(a);
       detailList.appendChild(li);
     }
@@ -416,8 +416,8 @@ class EHRIItem extends HTMLElement {
     let subItemsDiv = fragment.querySelector(".ei-subitems");
     if (subItems) {
       let a = document.createElement("a");
-      a.setAttribute("target", "_blank");
       a.href = `${url}/search`;
+      a.target = "_blank";
       a.textContent = subItems;
       subItemsDiv.appendChild(a);
     } else {
@@ -440,11 +440,7 @@ const ER_BASE_URL = "https://api.eosc-portal.eu";
 
 const ER_TEMPLATE = `
   <style>
-  .er {
-    display: grid;
-    grid-template-areas: 'logo title' 'logo description';
-    grid-template-columns: 8rem 1fr;
-    grid-gap: 1rem;
+  .er-container {
     border: 1px solid #eee;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     line-height: 1.42857;
@@ -452,6 +448,12 @@ const ER_TEMPLATE = `
     margin: 1rem 0;
     box-shadow: 2px 2px 6px 2px rgba(230, 230, 230, 1);
     background-color: #fff;
+  }
+  .er {
+    display: grid;
+    grid-template-areas: 'logo title' 'logo description';
+    grid-template-columns: 8rem 1fr;
+    grid-gap: .5rem 0.7rem;
     padding: .7em .5em;
   }
   .logo {
@@ -483,6 +485,20 @@ const ER_TEMPLATE = `
     width: 20rem;
     height: auto;
   }
+  .er-footer {
+      margin-top: 5px;
+      border-top: 1px solid #ddd;
+      padding: 0 .25em;
+      background-color: #f5f5f5;
+      overflow: auto;
+  }
+  .er-footer a {
+      float: right;
+      color: #666;
+      padding: .2em;
+      font-size: .85em;
+      box-shadow: none;
+  }
   .loading-placeholder {
       background-color: #efefef;
       color: #efefef;
@@ -497,17 +513,22 @@ const ER_TEMPLATE = `
     height: 8rem;
   }
   </style>
-  <div class="er">
-    <a href="#" target="_blank" class="logo loading-placeholder">
-    </a>
-    <header class="er-header">
-        <a class="loading-placeholder" href="#" target="_blank">Loading...</a>
-    </header>
-    <div class="er-description">
-        <p class="loading-placeholder"></p>
-        <p class="loading-placeholder"></p>
-        <p class="loading-placeholder"></p>
-        <p class="loading-placeholder"></p>
+  <div class="er-container">
+    <div class="er">
+      <a href="#" target="_blank" class="logo loading-placeholder">
+      </a>
+      <header class="er-header">
+          <a class="loading-placeholder" href="#" target="_blank">Loading...</a>
+      </header>
+      <div class="er-description">
+          <p class="loading-placeholder"></p>
+          <p class="loading-placeholder"></p>
+          <p class="loading-placeholder"></p>
+          <p class="loading-placeholder"></p>
+      </div>
+    </div>
+    <div class="er-footer">
+        <a href="#" target="_blank">Visit this site</a>
     </div>
   </div>
 `;
@@ -541,23 +562,29 @@ class EHRIResource extends HTMLElement {
 
     let logoLink = fragment.querySelector(".er a.logo");
     logoLink.classList.remove("loading-placeholder");
+    logoLink.href = data.webpage;
     let logoImg = document.createElement("img");
-    logoImg.setAttribute("alt", data.name);
-    logoImg.setAttribute("src", data.logo);
+    logoImg.alt = data.name;
+    logoImg.src = data.logo;
     logoLink.appendChild(logoImg);
 
     let headerLink = fragment.querySelector("header a");
     headerLink.classList.remove("loading-placeholder");
-    headerLink.setAttribute("href", data.webpage);
+    headerLink.href = data.webpage;
     headerLink.textContent = data.name;
 
     let descDiv = fragment.querySelector(".er-description");
     descDiv.textContent = '';
-    for (let para of ehri_truncateText(data.description)) {
+    for (let para of truncateText(data.description)) {
       let p = document.createElement("p");
       p.textContent = para;
       descDiv.appendChild(p);
     }
+
+    let footerLink = fragment.querySelector(".er-footer a");
+    footerLink.classList.remove("loading-placeholder");
+    footerLink.href = data.webpage;
+    footerLink.textContent = "Visit this site";
 
     return fragment;
   }
