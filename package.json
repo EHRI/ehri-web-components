@@ -7,8 +7,11 @@
   "readme": "https://github.com/EHRI/ehri-web-components/README.md",
   "description": "A small plain JS library for embedding info about EHRI portal items in web pages.",
   "main": "ehri-web-components.js",
-  "dependencies": {
-  },
   "devDependencies": {
+    "esbuild": "^0.17.4"
+  },
+  "scripts": {
+    "build": "esbuild src/ehri-web-components.js --bundle --loader:.css=text --loader:.html=text --outdir=dist",
+    "serve": "esbuild src/ehri-web-components.js --serve=3000 --bundle --loader:.css=text --loader:.html=text --outdir=dist --servedir=."
   }
 }

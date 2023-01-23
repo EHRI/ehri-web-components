@@ -12,7 +12,7 @@ Example:
 <ehri-item item-id="us-005578"></ehri-item>
 ```
 
-Currently the following item types are supported:
+Currently, the following item types are supported:
 
 * [Archival Institutions](https://portal.ehri-project.eu/institutions)
 * [Archival Descriptions](https://portal.ehri-project.eu/units)
@@ -21,4 +21,17 @@ Currently the following item types are supported:
 
 NB: this library is at a very early stage and probably has numerous bugs and issues.
 
+Building
+========
+
+```shell
+npm install
+npm run build
+```
+
+To develop you can use the following to rebuild on file changes:
+
+```shell
+npm run serve
+```
 
