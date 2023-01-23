@@ -1,0 +1,28 @@
+/** NB: this CSS extends item.css **/
+.item {
+    display: grid;
+    grid-template-areas: 'logo title' 'logo description';
+    grid-template-columns: 8rem 1fr;
+    grid-gap: .5rem 0.7rem;
+}
+.logo {
+    grid-area: logo;
+}
+.logo img {
+    width: 8rem;
+    height: auto;
+}
+header {
+    grid-area: title;
+}
+.description {
+    grid-area: description;
+}
+.description img {
+    width: 20rem;
+    height: auto;
+}
+.logo.loading-placeholder {
+    width: 8rem;
+    height: 8rem;
+}

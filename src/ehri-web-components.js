@@ -10,213 +10,19 @@ const EI_PATH_MAP = {
   Country: 'countries',
 }
 
+// Import templates as strings (this relies on esbuild --loader:.css=text and --loader:.html=text)
+import item_css from './css/item.css';
+import item_html from './html/item.html';
+import service_css from './css/service.css';
+import service_html from './html/service.html';
+
 function truncateText(str) {
   return str
       ? str.split(/\r?\n\r?\n/).splice(0, 4)
       : [];
 }
 
-const EI_TEMPLATE = `
-  <style>
-    .ei-container * {
-        margin: 0;
-        padding: 0;
-        border: 0;
-    }
-    
-    .ei-container {
-        border: 1px solid #eee;
-        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-        line-height: 1.42857;
-        font-size: 14px;
-        margin: 20px 0;
-        box-shadow: 2px 2px 6px 2px rgba(230, 230, 230, 1);
-        background-color: #fff;
-    }
-
-    .ei {
-        padding: .7em .5em;
-    }
-
-    .ei-body {
-        margin: 0;
-    }
-    
-    .ei-body p {
-        margin-bottom: .5rem;
-    }
-
-    .ei-heading header {
-        font-family: serif;
-        margin-top: 0;
-        margin-bottom: 0;
-        text-transform: none;
-        font-size: 1.3rem;
-        font-weight: 400;
-    }
-
-    .ei-heading a {
-        text-decoration: none;
-        box-shadow: none;
-    }
-
-    .ei-heading a:hover {
-        text-decoration: underline;
-    }
-
-    .ei-heading.Repository a header {
-        color: inherit;
-    }
-
-    .ei-heading.Repository a {
-        color: #034153;
-    }
-
-    .ei-heading.HistoricalAgent a {
-        color: #517c00;
-    }
-
-    .ei-heading.DocumentaryUnit a {
-        color: #6c003b;
-    }
-
-    .ei-heading.VirtualUnit a {
-        color: #544F5F;
-    }
-    
-    .ei-heading.Country a {
-        color: #864300;
-    }
-
-    .ei-details {
-        font-size: .85em;
-    }
-
-    .ei-details a.alt {
-        color: #111;
-        font-weight: bolder;
-        box-shadow: none;
-    }
-
-    .ei-details a.alt:hover {
-        text-decoration: underline;
-    }
-
-    .ei-subitems a {
-        font-size: .85em;
-        margin-top: 5px;
-        color: #333;
-        font-weight: lighter;
-        box-shadow: none;
-        text-shadow: rgba(82, 168, 236, 0.8) 0 0 5px;
-    }
-
-    .ei-subitems a:hover {
-        text-decoration: underline;
-    }
-
-    .ei-details ul {
-        padding-left: 0;
-        margin-left: 0;
-        list-style: none;
-        color: #999;
-        margin-bottom: 5px;
-    }
-
-    .ei-details li:first-child {
-        padding-left: 0;
-    }
-
-    .ei-details li {
-        padding-right: 5px;
-        display: inline-block;
-    }
-
-    .ei-heading ul.ei-alternate-names {
-        list-style: none;
-        margin-left: 0;
-        margin-bottom: 5px;
-        line-height: inherit;
-    }
-
-    .ei-alternate-names li {
-        font-weight: bold;
-        display: inline;
-    }
-
-    .ei-heading ul.ei-alternate-names li:after {
-        content: " | ";
-    }
-
-    .ei-heading ul.ei-alternate-names li:last-child:after {
-        content: "";
-    }
-
-    .ei-footer {
-        margin-top: 5px;
-        border-top: 1px solid #ddd;
-        padding: 0 .25em;
-        background-color: #f5f5f5;
-        overflow: auto;
-    }
-
-    .ei-footer a {
-        float: right;
-        color: #666;
-        padding: .2em;
-        font-size: .85em;
-        box-shadow: none;
-    }
-
-    .ei-footer a:hover {
-        color: #333;
-    }
-
-    .ei-placeholder {
-        margin: 10px;
-    }
-
-    .loading-placeholder {
-        background-color: #efefef;
-        color: #efefef;
-        white-space:nowrap;
-        -moz-transform: rotate(.8deg) skewx(-12deg);
-        -moz-box-shadow:3px 0 2px #444;
-        border:4px solid #fff;
-        background: -moz-linear-gradient(180deg, #000, #222);
-    }
-  </style>
-  <div class="ei-container">
-    <div class="ei">
-      <div class="ei-heading type-highlight">
-        <header>
-          <a target="_blank" class="external type-highlight loading-placeholder">
-            Loading...
-          </a>
-        </header>
-        <ul class="ei-alternate-names">
-          <li class="loading-placeholder">Loading...</li>
-        </ul>
-      </div>
-      <div class="ei-details">
-        <ul>
-          <li class="loading-placeholder">Loading...</li>
-        </ul>
-      </div>
-      <div class="ei-body">
-        <p class="loading-placeholder">Loading...</p>
-        <p class="loading-placeholder">Loading...</p>
-        <p class="loading-placeholder">Loading...</p>
-        <p class="loading-placeholder">Loading...</p>
-      </div>
-      <div class="ei-subitems">
-      </div>
-    </div>
-    <div class="ei-footer">
-      <a target="_blank" href="#" class="loading-placeholder">Loading...</a>
-    </div>
-  </div>
-`;
+const EI_TEMPLATE = `<style>${item_css}</style>${item_html}`;
 
 class EHRIItem extends HTMLElement {
   constructor() {
@@ -368,13 +174,13 @@ class EHRIItem extends HTMLElement {
     let content = document.createElement("template");
     content.innerHTML = EI_TEMPLATE;
     let fragment = content.content;
-    let headDiv = fragment.querySelector(".ei-heading");
+    let headDiv = fragment.querySelector(".heading");
     headDiv.classList.add(type);
-    let headLink = fragment.querySelector(".ei-heading header a");
+    let headLink = fragment.querySelector(".heading header a");
     headLink.href = url;
     headLink.classList.remove("loading-placeholder");
     headLink.textContent = name;
-    let altNameList = fragment.querySelector(".ei-alternate-names");
+    let altNameList = fragment.querySelector(".alternate-names");
     if (otherNames) {
       altNameList.textContent = "";
       for (let name of otherNames) {
@@ -386,7 +192,7 @@ class EHRIItem extends HTMLElement {
       altNameList.remove();
     }
 
-    let body = fragment.querySelector(".ei-body");
+    let body = fragment.querySelector(".description");
     body.textContent = "";
     for (let para of paras) {
       let p = document.createElement("p");
@@ -394,7 +200,7 @@ class EHRIItem extends HTMLElement {
       body.appendChild(p);
     }
 
-    let detailList = fragment.querySelector(".ei-details ul");
+    let detailList = fragment.querySelector(".details ul");
     detailList.textContent = "";
     for (const [name, url] of Object.entries(parents)) {
       let li = document.createElement("li");
@@ -413,7 +219,7 @@ class EHRIItem extends HTMLElement {
       detailList.appendChild(li);
     }
 
-    let subItemsDiv = fragment.querySelector(".ei-subitems");
+    let subItemsDiv = fragment.querySelector(".subitems");
     if (subItems) {
       let a = document.createElement("a");
       a.href = `${url}/search`;
@@ -424,7 +230,7 @@ class EHRIItem extends HTMLElement {
       subItemsDiv.remove();
     }
 
-    let footerLink = fragment.querySelector(".ei-footer a");
+    let footerLink = fragment.querySelector("footer a");
     footerLink.href = url;
     footerLink.classList.remove("loading-placeholder");
     footerLink.textContent = "View this item on the EHRI Portal";
@@ -438,100 +244,7 @@ const ER_ID_ATTR = "resource-id";
 const ER_BASE_URL_ATTR = "base-url";
 const ER_BASE_URL = "https://api.eosc-portal.eu";
 
-const ER_TEMPLATE = `
-  <style>
-  .er-container {
-    border: 1px solid #eee;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    line-height: 1.42857;
-    font-size: 14px;
-    margin: 1rem 0;
-    box-shadow: 2px 2px 6px 2px rgba(230, 230, 230, 1);
-    background-color: #fff;
-  }
-  .er {
-    display: grid;
-    grid-template-areas: 'logo title' 'logo description';
-    grid-template-columns: 8rem 1fr;
-    grid-gap: .5rem 0.7rem;
-    padding: .7em .5em;
-  }
-  .logo {
-    grid-area: logo;
-  }
-  img {
-    width: 8rem;
-    height: auto;
-  }
-  header {
-    grid-area: title;
-    margin: 0;
-    color: #83014c;
-    font-size: 1.3rem;
-  }
-  header a {
-    text-decoration: none;
-  }
-  header a:hover {
-    text-decoration: underline;
-  }
-  .er-description {
-    grid-area: description;
-  }
-  .er-description p {
-    margin: 0 0 1rem 0;
-  }
-  .er-description img {
-    width: 20rem;
-    height: auto;
-  }
-  .er-footer {
-      margin-top: 5px;
-      border-top: 1px solid #ddd;
-      padding: 0 .25em;
-      background-color: #f5f5f5;
-      overflow: auto;
-  }
-  .er-footer a {
-      float: right;
-      color: #666;
-      padding: .2em;
-      font-size: .85em;
-      box-shadow: none;
-  }
-  .loading-placeholder {
-      background-color: #efefef;
-      color: #efefef;
-      white-space:nowrap;
-      -moz-transform: rotate(.8deg) skewx(-12deg);
-      -moz-box-shadow:3px 0 2px #444;
-      border:4px solid #fff;
-      background: -moz-linear-gradient(180deg, #000, #222);
-  }
-  .logo.loading-placeholder {
-    width: 8rem;
-    height: 8rem;
-  }
-  </style>
-  <div class="er-container">
-    <div class="er">
-      <a href="#" target="_blank" class="logo loading-placeholder">
-      </a>
-      <header class="er-header">
-          <a class="loading-placeholder" href="#" target="_blank">Loading...</a>
-      </header>
-      <div class="er-description">
-          <p class="loading-placeholder"></p>
-          <p class="loading-placeholder"></p>
-          <p class="loading-placeholder"></p>
-          <p class="loading-placeholder"></p>
-      </div>
-    </div>
-    <div class="er-footer">
-        <a href="#" target="_blank">Visit this site</a>
-    </div>
-  </div>
-`;
+const ER_TEMPLATE = `<style>${item_css}${service_css}</style>${service_html}`;
 
 class EHRIResource extends HTMLElement {
   constructor() {
@@ -560,7 +273,7 @@ class EHRIResource extends HTMLElement {
     content.innerHTML = ER_TEMPLATE;
     let fragment = content.content;
 
-    let logoLink = fragment.querySelector(".er a.logo");
+    let logoLink = fragment.querySelector(".item a.logo");
     logoLink.classList.remove("loading-placeholder");
     logoLink.href = data.webpage;
     let logoImg = document.createElement("img");
@@ -573,7 +286,7 @@ class EHRIResource extends HTMLElement {
     headerLink.href = data.webpage;
     headerLink.textContent = data.name;
 
-    let descDiv = fragment.querySelector(".er-description");
+    let descDiv = fragment.querySelector(".description");
     descDiv.textContent = '';
     for (let para of truncateText(data.description)) {
       let p = document.createElement("p");
@@ -581,7 +294,7 @@ class EHRIResource extends HTMLElement {
       descDiv.appendChild(p);
     }
 
-    let footerLink = fragment.querySelector(".er-footer a");
+    let footerLink = fragment.querySelector("footer a");
     footerLink.classList.remove("loading-placeholder");
     footerLink.href = data.webpage;
     footerLink.textContent = "Visit this site";
