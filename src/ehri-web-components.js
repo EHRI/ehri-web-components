@@ -22,6 +22,21 @@ function truncateText(str) {
       : [];
 }
 
+function renderError(errorHtml) {
+  return `
+    <style>
+      pre.error {
+          border: 1px solid #f5c6cb;
+          border-radius: .3rem;
+          background-color: #f8d7da;
+          color: #721c24;
+          padding: .4rem .7rem;
+      }
+    </style>
+    <pre class="error">${errorHtml}</pre>
+  `;
+}
+
 const EI_TEMPLATE = `<style>${item_css}</style>${item_html}`;
 
 class EHRIItem extends HTMLElement {
@@ -49,22 +64,24 @@ class EHRIItem extends HTMLElement {
   render() {
     let itemId = this.getAttribute(EI_ID_ATTR);
     let baseUrl = this.getAttribute(EI_BASE_URL_ATTR) || EI_BASE_URL;
-    fetch(`${baseUrl}/api/v1/${itemId}`)
-        .then(r => r.json())
-        .then(data => {
-          let renderData = this.getData(itemId, baseUrl, data);
-          let fragment = this.buildFragment(renderData);
-          this.shadowRoot.textContent = "";
-          this.shadowRoot.appendChild(fragment);
-        })
-        .catch(e => {
-          console.error(e);
-          this.shadowRoot.innerHTML = `
-            <pre class="error">
-              An EHRI item with id &quot;${itemId}&quot; could not be loaded.
-            </pre>
-          `;
-        });
+    if (itemId) {
+      fetch(`${baseUrl}/api/v1/${itemId}`)
+          .then(r => r.json())
+          .then(data => {
+            let renderData = this.getData(itemId, baseUrl, data);
+            let fragment = this.buildFragment(renderData);
+            this.shadowRoot.textContent = "";
+            this.shadowRoot.appendChild(fragment);
+          })
+          .catch(e => {
+            console.error(e);
+            this.shadowRoot.innerHTML = renderError(
+                `An EHRI item with id &quot;${itemId}&quot; could not be loaded.`);
+          });
+    } else {
+      this.shadowRoot.innerHTML = renderError(
+          `An EHRI item ID must specified with the <code>item-id</code> attribute.`);
+    }
   }
 
   parseRepository(baseUrl, itemId, type, json) {
@@ -305,21 +322,23 @@ class EHRIResource extends HTMLElement {
   render() {
     let itemId = this.getAttribute(ER_ID_ATTR);
     let baseUrl = this.getAttribute(ER_BASE_URL_ATTR) || ER_BASE_URL;
-    fetch(`${baseUrl}/service/${itemId}`)
-        .then(r => r.json())
-        .then(data => {
-          let fragment = this.buildFragment(data);
-          this.shadowRoot.textContent = "";
-          this.shadowRoot.appendChild(fragment);
-        })
-        .catch(e => {
-          console.error(e);
-          this.shadowRoot.innerHTML = `
-            <pre class="error">
-              An EHRI resource with id &quot;${itemId}&quot; could not be loaded.
-            </pre>
-          `;
-        });
+    if (itemId) {
+      fetch(`${baseUrl}/service/${itemId}`)
+          .then(r => r.json())
+          .then(data => {
+            let fragment = this.buildFragment(data);
+            this.shadowRoot.textContent = "";
+            this.shadowRoot.appendChild(fragment);
+          })
+          .catch(e => {
+            console.error(e);
+            this.shadowRoot.innerHTML = renderError(
+                `An EHRI resource with id &quot;${itemId}&quot; could not be loaded.`);
+          });
+    } else {
+      this.shadowRoot.innerHTML = renderError(
+          `An EOSC resource ID must specified with the &quot;resource-id&quot; attribute.`);
+    }
   }
 }
 
