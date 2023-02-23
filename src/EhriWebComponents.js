@@ -1,4 +1,3 @@
-
 const EI_ID_ATTR = "item-id";
 const EI_BASE_URL_ATTR = "base-url";
 const EI_BASE_URL = "https://portal.ehri-project.eu";
@@ -39,7 +38,7 @@ function renderError(errorHtml) {
 
 const EI_TEMPLATE = `<style>${item_css}</style>${item_html}`;
 
-class EHRIItem extends HTMLElement {
+export class EHRIItem extends HTMLElement {
   constructor() {
     self = super();
 
@@ -263,7 +262,7 @@ const ER_BASE_URL = "https://api.eosc-portal.eu";
 
 const ER_TEMPLATE = `<style>${item_css}${service_css}</style>${service_html}`;
 
-class EHRIResource extends HTMLElement {
+export class EHRIResource extends HTMLElement {
   constructor() {
     self = super();
 
@@ -341,6 +340,3 @@ class EHRIResource extends HTMLElement {
     }
   }
 }
-
-customElements.define("ehri-item", EHRIItem);
-customElements.define("ehri-resource", EHRIResource);

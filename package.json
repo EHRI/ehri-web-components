@@ -11,7 +11,7 @@
     "esbuild": "^0.17.4"
   },
   "scripts": {
-    "build": "esbuild src/ehri-web-components.js --bundle --loader:.css=text --loader:.html=text --outdir=dist",
-    "serve": "esbuild src/ehri-web-components.js --serve=3000 --bundle --loader:.css=text --loader:.html=text --outdir=dist --servedir=."
+    "build": "esbuild ehri-web-components.js --bundle --loader:.css=text --loader:.html=text --outdir=dist",
+    "serve": "esbuild ehri-web-components.js --serve=3000 --bundle --loader:.css=text --loader:.html=text --outdir=dist --servedir=."
   }
 }
