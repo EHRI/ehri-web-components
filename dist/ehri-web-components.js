@@ -5,12 +5,6 @@
   // src/html/item.html
   var item_default2 = '<div class="container">\n    <div class="item">\n        <div class="heading type-highlight">\n            <header>\n                <a target="_blank" class="external type-highlight loading-placeholder">\n                    Loading...\n                </a>\n            </header>\n            <ul class="alternate-names">\n                <li class="loading-placeholder">Loading...</li>\n            </ul>\n        </div>\n        <div class="details">\n            <ul>\n                <li class="loading-placeholder">Loading...</li>\n            </ul>\n        </div>\n        <div class="description">\n            <p class="loading-placeholder">Loading...</p>\n            <p class="loading-placeholder">Loading...</p>\n            <p class="loading-placeholder">Loading...</p>\n            <p class="loading-placeholder">Loading...</p>\n        </div>\n        <div class="subitems">\n        </div>\n    </div>\n    <footer>\n        <a target="_blank" href="#" class="loading-placeholder">Loading...</a>\n    </footer>\n</div>\n';
 
-  // src/css/service.css
-  var service_default = "/** NB: this CSS extends item.css **/\n.item {\n    display: grid;\n    grid-template-areas: 'logo title' 'logo description';\n    grid-template-columns: 8rem 1fr;\n    grid-gap: .5rem 0.7rem;\n}\n.logo {\n    grid-area: logo;\n}\n.logo img {\n    width: 8rem;\n    height: auto;\n}\nheader {\n    grid-area: title;\n}\n.description {\n    grid-area: description;\n}\n.description img {\n    width: 20rem;\n    height: auto;\n}\n.logo.loading-placeholder {\n    width: 8rem;\n    height: 8rem;\n}\n";
-
-  // src/html/service.html
-  var service_default2 = '<div class="container">\n    <div class="item">\n        <a href="#" target="_blank" class="logo loading-placeholder">\n        </a>\n        <div class="heading">\n            <header>\n                <a class="loading-placeholder" href="#" target="_blank">Loading...</a>\n            </header>\n        </div>\n        <div class="description">\n            <p class="loading-placeholder">Loading...</p>\n            <p class="loading-placeholder">Loading...</p>\n        </div>\n    </div>\n    <footer>\n        <a href="#" class="loading-placeholder" target="_blank"></a>\n    </footer>\n</div>';
-
   // src/EhriWebComponents.js
   var EI_ID_ATTR = "item-id";
   var EI_BASE_URL_ATTR = "base-url";
@@ -231,78 +225,7 @@
       return fragment;
     }
   };
-  var ER_ID_ATTR = "resource-id";
-  var ER_BASE_URL_ATTR = "base-url";
-  var ER_BASE_URL = "https://api.eosc-portal.eu";
-  var ER_TEMPLATE = `<style>${item_default}${service_default}</style>${service_default2}`;
-  var EHRIResource = class extends HTMLElement {
-    constructor() {
-      self = super();
-      this.attachShadow({ mode: "open" });
-      let template = document.createElement("template");
-      template.innerHTML = ER_TEMPLATE;
-      this.shadowRoot.appendChild(template.content);
-    }
-    static get observedAttributes() {
-      return [ER_ID_ATTR, ER_BASE_URL_ATTR];
-    }
-    attributeChangedCallback() {
-      this.render();
-    }
-    connectedCallback() {
-      this.render();
-    }
-    buildFragment(data) {
-      let content = document.createElement("template");
-      content.innerHTML = ER_TEMPLATE;
-      let fragment = content.content;
-      let logoLink = fragment.querySelector(".item a.logo");
-      logoLink.classList.remove("loading-placeholder");
-      logoLink.href = data.webpage;
-      let logoImg = document.createElement("img");
-      logoImg.alt = data.name;
-      logoImg.src = data.logo;
-      logoLink.appendChild(logoImg);
-      let headerLink = fragment.querySelector("header a");
-      headerLink.classList.remove("loading-placeholder");
-      headerLink.href = data.webpage;
-      headerLink.textContent = data.name;
-      let descDiv = fragment.querySelector(".description");
-      descDiv.textContent = "";
-      for (let para of truncateText(data.description)) {
-        let p = document.createElement("p");
-        p.textContent = para;
-        descDiv.appendChild(p);
-      }
-      let footerLink = fragment.querySelector("footer a");
-      footerLink.classList.remove("loading-placeholder");
-      footerLink.href = data.webpage;
-      footerLink.textContent = "Visit this site";
-      return fragment;
-    }
-    render() {
-      let itemId = this.getAttribute(ER_ID_ATTR);
-      let baseUrl = this.getAttribute(ER_BASE_URL_ATTR) || ER_BASE_URL;
-      if (itemId) {
-        fetch(`${baseUrl}/service/${itemId}`).then((r) => r.json()).then((data) => {
-          let fragment = this.buildFragment(data);
-          this.shadowRoot.textContent = "";
-          this.shadowRoot.appendChild(fragment);
-        }).catch((e) => {
-          console.error(e);
-          this.shadowRoot.innerHTML = renderError(
-            `An EHRI resource with id &quot;${itemId}&quot; could not be loaded.`
-          );
-        });
-      } else {
-        this.shadowRoot.innerHTML = renderError(
-          `An EOSC resource ID must specified with the &quot;resource-id&quot; attribute.`
-        );
-      }
-    }
-  };
 
   // ehri-web-components.js
   customElements.define("ehri-item", EHRIItem);
-  customElements.define("ehri-resource", EHRIResource);
 })();

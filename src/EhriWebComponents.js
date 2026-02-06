@@ -12,8 +12,6 @@ const EI_PATH_MAP = {
 // Import templates as strings (this relies on esbuild --loader:.css=text and --loader:.html=text)
 import item_css from './css/item.css';
 import item_html from './html/item.html';
-import service_css from './css/service.css';
-import service_html from './html/service.html';
 
 function truncateText(str) {
   return str
@@ -252,91 +250,5 @@ export class EHRIItem extends HTMLElement {
     footerLink.textContent = "View this item on the EHRI Portal";
 
     return fragment;
-  }
-}
-
-
-const ER_ID_ATTR = "resource-id";
-const ER_BASE_URL_ATTR = "base-url";
-const ER_BASE_URL = "https://api.eosc-portal.eu";
-
-const ER_TEMPLATE = `<style>${item_css}${service_css}</style>${service_html}`;
-
-export class EHRIResource extends HTMLElement {
-  constructor() {
-    self = super();
-
-    this.attachShadow({ mode: "open" });
-    let template = document.createElement("template");
-    template.innerHTML = ER_TEMPLATE;
-    this.shadowRoot.appendChild(template.content);
-  }
-
-  static get observedAttributes() {
-    return [ER_ID_ATTR, ER_BASE_URL_ATTR];
-  }
-
-  attributeChangedCallback() {
-    this.render();
-  }
-
-  connectedCallback() {
-    this.render();
-  }
-
-  buildFragment(data) {
-    let content = document.createElement("template");
-    content.innerHTML = ER_TEMPLATE;
-    let fragment = content.content;
-
-    let logoLink = fragment.querySelector(".item a.logo");
-    logoLink.classList.remove("loading-placeholder");
-    logoLink.href = data.webpage;
-    let logoImg = document.createElement("img");
-    logoImg.alt = data.name;
-    logoImg.src = data.logo;
-    logoLink.appendChild(logoImg);
-
-    let headerLink = fragment.querySelector("header a");
-    headerLink.classList.remove("loading-placeholder");
-    headerLink.href = data.webpage;
-    headerLink.textContent = data.name;
-
-    let descDiv = fragment.querySelector(".description");
-    descDiv.textContent = '';
-    for (let para of truncateText(data.description)) {
-      let p = document.createElement("p");
-      p.textContent = para;
-      descDiv.appendChild(p);
-    }
-
-    let footerLink = fragment.querySelector("footer a");
-    footerLink.classList.remove("loading-placeholder");
-    footerLink.href = data.webpage;
-    footerLink.textContent = "Visit this site";
-
-    return fragment;
-  }
-
-  render() {
-    let itemId = this.getAttribute(ER_ID_ATTR);
-    let baseUrl = this.getAttribute(ER_BASE_URL_ATTR) || ER_BASE_URL;
-    if (itemId) {
-      fetch(`${baseUrl}/service/${itemId}`)
-          .then(r => r.json())
-          .then(data => {
-            let fragment = this.buildFragment(data);
-            this.shadowRoot.textContent = "";
-            this.shadowRoot.appendChild(fragment);
-          })
-          .catch(e => {
-            console.error(e);
-            this.shadowRoot.innerHTML = renderError(
-                `An EHRI resource with id &quot;${itemId}&quot; could not be loaded.`);
-          });
-    } else {
-      this.shadowRoot.innerHTML = renderError(
-          `An EOSC resource ID must specified with the &quot;resource-id&quot; attribute.`);
-    }
   }
 }
