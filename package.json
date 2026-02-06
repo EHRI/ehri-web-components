@@ -1,6 +1,6 @@
 {
   "name": "@ehri/web-components",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "license": "EUPL-1.2",
   "homepage": "https://github.com/EHRI/ehri-web-components",
   "bugs": "https://github.com/EHRI/ehri-web-components/issues",
@@ -10,8 +10,12 @@
   "devDependencies": {
     "esbuild": "^0.27.3"
   },
+  "files": ["dist"],
   "scripts": {
-    "build": "esbuild ehri-web-components.js --bundle --loader:.css=text --loader:.html=text --outdir=dist",
-    "serve": "esbuild ehri-web-components.js --serve=3000 --bundle --loader:.css=text --loader:.html=text --outdir=dist --servedir=."
+    "build": "npm run build:dev && npm run build:browser",
+    "build:dev": "esbuild ehri-web-components.js --bundle --loader:.css=text --loader:.html=text --outfile=dist/ehri-web-components.js",
+    "build:browser": "esbuild ehri-web-components.js --bundle --minify --sourcemap --loader:.css=text --loader:.html=text --outfile=dist/ehri-web-components.min.js --platform=browser --target=es2015",
+    "serve": "esbuild ehri-web-components.js --serve=3000 --bundle --loader:.css=text --loader:.html=text --outdir=dist --servedir=.",
+    "prepublishOnly": "npm run build"
   }
 }
