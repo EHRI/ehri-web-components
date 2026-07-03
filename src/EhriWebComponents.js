@@ -1,5 +1,6 @@
 const EI_ID_ATTR = "item-id";
 const EI_BASE_URL_ATTR = "base-url";
+const EI_TRUNCATE_ATTR = "truncate";
 const EI_BASE_URL = "https://portal.ehri-project.eu";
 const EI_PATH_MAP = {
   DocumentaryUnit: 'units',
@@ -9,18 +10,76 @@ const EI_PATH_MAP = {
   Country: 'countries',
 }
 
+// Maximum number of characters in a paragraph:
+const EI_MAX_LENGTH = 1024;
+
 // Import templates as strings (this relies on esbuild --loader:.css=text and --loader:.html=text)
 import item_css from './css/item.css';
 import item_html from './html/item.html';
 
-function truncateText(str) {
-  return str
-      ? str.split(/\r?\n\r?\n/).splice(0, 4)
-      : [];
-}
+const EI_TEMPLATE = `<style>${item_css}</style>${item_html}`;
 
-function renderError(errorHtml) {
-  return `
+export class EHRIItem extends HTMLElement {
+  constructor() {
+    super();
+
+    this.attachShadow({ mode: "open" });
+    let template = document.createElement("template");
+    template.innerHTML = EI_TEMPLATE;
+    this.shadowRoot.appendChild(template.content);
+  }
+
+  static get observedAttributes() {
+    return [EI_ID_ATTR, EI_BASE_URL_ATTR, EI_TRUNCATE_ATTR];
+  }
+
+  attributeChangedCallback() {
+    this.render();
+  }
+
+  connectedCallback() {
+    this.render();
+  }
+
+  #stripHtml(html) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    return tmp.textContent || '';
+  }
+
+  #truncateText(str, maxLength) {
+    // Strip any embedded HTML first, then split the plain text into
+    // paragraphs on blank lines, discarding empty ones...
+    const allParas = this.#stripHtml(str || '')
+        .split(/\r?\n\r?\n/)
+        .map(p => p.trim())
+        .filter(p => p.length > 0);
+
+    // Show at most the first four paragraphs, within maxLength:
+    const paras = [];
+    let remaining = maxLength;
+    let truncated = false;
+    for (const para of allParas) {
+      if (paras.length >= 4 || remaining <= 0) {
+        // More content exists than we're showing.
+        truncated = true;
+        break;
+      }
+      if (para.length <= remaining) {
+        paras.push(para);
+        remaining -= para.length;
+      } else {
+        paras.push(para.slice(0, remaining).trimEnd());
+        truncated = true;
+        break;
+      }
+    }
+
+    return {paras, truncated};
+  }
+
+  #renderError(errorHtml) {
+    return `
     <style>
       pre.error {
           border: 1px solid #f5c6cb;
@@ -32,107 +91,90 @@ function renderError(errorHtml) {
     </style>
     <pre class="error">${errorHtml}</pre>
   `;
-}
-
-const EI_TEMPLATE = `<style>${item_css}</style>${item_html}`;
-
-export class EHRIItem extends HTMLElement {
-  constructor() {
-    self = super();
-
-    this.attachShadow({ mode: "open" });
-    let template = document.createElement("template");
-    template.innerHTML = EI_TEMPLATE;
-    this.shadowRoot.appendChild(template.content);
-  }
-
-  static get observedAttributes() {
-    return [EI_ID_ATTR, EI_BASE_URL_ATTR];
-  }
-
-  attributeChangedCallback() {
-    this.render();
-  }
-
-  connectedCallback() {
-    this.render();
   }
 
   render() {
     let itemId = this.getAttribute(EI_ID_ATTR);
     let baseUrl = this.getAttribute(EI_BASE_URL_ATTR) || EI_BASE_URL;
+    let truncateTo = parseInt(this.getAttribute(EI_TRUNCATE_ATTR)) || EI_MAX_LENGTH;
     if (itemId) {
       fetch(`${baseUrl}/api/v1/${itemId}`)
           .then(r => r.json())
           .then(data => {
-            let renderData = this.getData(itemId, baseUrl, data);
-            let fragment = this.buildFragment(renderData);
+            let renderData = this.#getData(itemId, baseUrl, data, truncateTo);
+            let fragment = this.#buildFragment(renderData);
             this.shadowRoot.textContent = "";
             this.shadowRoot.appendChild(fragment);
           })
           .catch(e => {
             console.error(e);
-            this.shadowRoot.innerHTML = renderError(
+            this.shadowRoot.innerHTML = this.#renderError(
                 `An EHRI item with id &quot;${itemId}&quot; could not be loaded.`);
           });
     } else {
-      this.shadowRoot.innerHTML = renderError(
-          `An EHRI item ID must specified with the <code>item-id</code> attribute.`);
+      this.shadowRoot.innerHTML = this.#renderError(
+          `An EHRI item ID must be specified with the <code>item-id</code> attribute.`);
     }
   }
 
-  parseRepository(baseUrl, itemId, type, json) {
+  #parseRepository(baseUrl, itemId, type, json, truncateTo) {
     const name = json.data.attributes.name;
     const otherNames = (json.data.attributes.otherFormsOfName || [])
         .concat(json.data.attributes.parallelFormsOfName || []);
-    const paras = truncateText(json.data.attributes.history);
+    const {paras, truncated} = this.#truncateText(json.data.attributes.history, truncateTo);
     const url = `${baseUrl}/${EI_PATH_MAP[type]}/${itemId}`;
     const details = [];
-    for (let attr of ['streetAddress', 'city']) {
-      let value = json.data.attributes.address[attr];
-      if (value) {
-        details.push(value);
+    const parents = {};
+    const address = json.data.attributes.address;
+    if (address) {
+      for (let attr of ['streetAddress', 'city']) {
+        if (address[attr]) {
+          details.push(address[attr]);
+        }
+      }
+      if (address.country && address.countryCode) {
+        parents[address.country] =
+            `${baseUrl}/${EI_PATH_MAP.Country}/${address.countryCode.toLowerCase()}`;
       }
     }
-    const parents = {};
-    if (json.data.attributes.address) {
-      parents[json.data.attributes.address.country] =
-          `${baseUrl}/${EI_PATH_MAP[type]}/${json.data.attributes.address.countryCode.toLowerCase()}`;
-    }
     let subItems = null;
-    if (json.data.meta.subitems) {
+    if (json.data.meta?.subitems) {
       let i = json.data.meta.subitems;
       if (i > 0) {
         subItems = `${i} archival description` + (i > 1 ? 's' : '');
       }
     }
 
-    return {type, url, name, otherNames, parents, paras, details, subItems};
+    return {type, url, name, otherNames, parents, paras, truncated, details, subItems};
   }
 
-  parseHistoricalAgent(baseUrl, itemId, type, json) {
+  #parseHistoricalAgent(baseUrl, itemId, type, json, truncateTo) {
     const name = json.data.attributes.name;
     const otherNames = (json.data.attributes.otherFormsOfName || [])
         .concat(json.data.attributes.parallelFormsOfName || []);
-    const paras = truncateText(json.data.attributes.history);
+    const {paras, truncated} = this.#truncateText(json.data.attributes.history, truncateTo);
     const url = `${baseUrl}/${EI_PATH_MAP[type]}/${itemId}`;
     const details = [];
     const parents = {};
     const subItems = null;
 
-    return {type, url, name, otherNames, parents, paras, details, subItems};
+    return {type, url, name, otherNames, parents, paras, truncated, details, subItems};
   }
 
-  parseDocumentaryUnit(baseUrl, itemId, type, json) {
-    const name = json.data.attributes.descriptions[0].name;
-    const otherNames = json.data.attributes.descriptions[0].parallelFormsOfName || [];
-    const paras = truncateText(json.data.attributes.descriptions[0].scopeAndContent);
+  #parseDocumentaryUnit(baseUrl, itemId, type, json, truncateTo) {
+    const desc = (json.data.attributes.descriptions || [])[0];
+    if (!desc) {
+      throw new Error(`No description available for item: ${itemId}`);
+    }
+    const name = desc.name;
+    const otherNames = desc.parallelFormsOfName || [];
+    const {paras, truncated} = this.#truncateText(desc.scopeAndContent, truncateTo);
     const url = `${baseUrl}/${EI_PATH_MAP[type]}/${itemId}`;
     const details = [];
     details.push(json.data.attributes.localId);
     for (let attr of ['language', 'extentAndMedium']) {
-      if (json.data.attributes.descriptions[0][attr]) {
-        details.push(json.data.attributes.descriptions[0][attr]);
+      if (desc[attr]) {
+        details.push(desc[attr]);
       }
     }
     const parents = {};
@@ -141,50 +183,50 @@ export class EHRIItem extends HTMLElement {
       parents[repo.attributes.name] = `${baseUrl}/${EI_PATH_MAP[repo.type]}/${repo.id}`;
     }
     let subItems = null;
-    if (json.data.meta.subitems) {
+    if (json.data.meta?.subitems) {
       let i = json.data.meta.subitems;
       if (i > 0) {
         subItems = `${i} child item` + (i > 1 ? 's' : '');
       }
     }
 
-    return {type, url, name, otherNames, parents, paras, details, subItems};
+    return {type, url, name, otherNames, parents, paras, truncated, details, subItems};
   }
 
-  parseCountry(baseUrl, itemId, type, json) {
+  #parseCountry(baseUrl, itemId, type, json, truncateTo) {
     const name = json.data.attributes.name;
     const otherNames = [];
-    const paras = truncateText(json.data.attributes.history);
+    const {paras, truncated} = this.#truncateText(json.data.attributes.history, truncateTo);
     const url = `${baseUrl}/${EI_PATH_MAP[type]}/${itemId}`;
     const details = [];
     const parents = {};
     let subItems = null;
-    if (json.data.meta.subitems) {
+    if (json.data.meta?.subitems) {
       let i = json.data.meta.subitems;
       if (i > 0) {
         subItems = `${i} institution` + (i > 1 ? 's' : '');
       }
     }
 
-    return {type, url, name, otherNames, parents, paras, details, subItems};
+    return {type, url, name, otherNames, parents, paras, truncated, details, subItems};
   }
 
-  getData(itemId, baseUrl, data) {
+  #getData(itemId, baseUrl, data, truncateTo) {
     const type = data.data.type;
     if (type === 'Repository') {
-      return this.parseRepository(baseUrl, itemId, type, data);
+      return this.#parseRepository(baseUrl, itemId, type, data, truncateTo);
     } else if (type === 'HistoricalAgent') {
-      return this.parseHistoricalAgent(baseUrl, itemId, type, data);
+      return this.#parseHistoricalAgent(baseUrl, itemId, type, data, truncateTo);
     } else if (type === 'DocumentaryUnit' || type === 'VirtualUnit') {
-      return this.parseDocumentaryUnit(baseUrl, itemId, type, data);
+      return this.#parseDocumentaryUnit(baseUrl, itemId, type, data, truncateTo);
     } else if (type === 'Country') {
-      return this.parseCountry(baseUrl, itemId, type, data);
+      return this.#parseCountry(baseUrl, itemId, type, data, truncateTo);
     } else {
-      throw new Exception(`Unsupported item type: ${type}`);
+      throw new Error(`Unsupported item type: ${type}`);
     }
   }
 
-  buildFragment({type, url, name, otherNames, parents, paras, details, subItems}) {
+  #buildFragment({type, url, name, otherNames, parents, paras, truncated, details, subItems}) {
     let content = document.createElement("template");
     content.innerHTML = EI_TEMPLATE;
     let fragment = content.content;
@@ -195,7 +237,7 @@ export class EHRIItem extends HTMLElement {
     headLink.classList.remove("loading-placeholder");
     headLink.textContent = name;
     let altNameList = fragment.querySelector(".alternate-names");
-    if (otherNames) {
+    if (otherNames.length) {
       altNameList.textContent = "";
       for (let name of otherNames) {
         let li = document.createElement("li");
@@ -208,11 +250,22 @@ export class EHRIItem extends HTMLElement {
 
     let body = fragment.querySelector(".description");
     body.textContent = "";
-    for (let para of paras) {
+    paras.forEach((para, i) => {
       let p = document.createElement("p");
       p.textContent = para;
+      // On the final paragraph, if the text was truncated, append an ellipsis
+      // followed by a "more" link to the full item.
+      if (truncated && i === paras.length - 1) {
+        p.append("… ");
+        let more = document.createElement("a");
+        more.href = url;
+        more.target = "_blank";
+        more.classList.add("more");
+        more.textContent = "more";
+        p.appendChild(more);
+      }
       body.appendChild(p);
-    }
+    });
 
     let detailList = fragment.querySelector(".details ul");
     detailList.textContent = "";
