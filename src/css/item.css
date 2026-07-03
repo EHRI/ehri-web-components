@@ -20,6 +20,16 @@
     margin: 0 0 .5rem;
 }
 
+.description a.more {
+    color: #000;
+    font-weight: bold;
+    box-shadow: none;
+}
+
+.description a.more:hover {
+    text-decoration: underline;
+}
+
 .heading header {
     font-family: serif;
     margin-top: 0;
